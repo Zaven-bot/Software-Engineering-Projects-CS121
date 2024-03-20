@@ -1,0 +1,33 @@
+In the provided multi-threading design, I have implemented two thread classes,
+the PassengerThread and TrainThread, each extending the Thread class provided. 
+These threads coordinate the movement of passengers and trains within the simulation.
+The memory needed by the simulations are encapsulated in my MBTA.java and Configuration.java
+class. Private fields mbta and log are assigned to each thread. This allows threads to access
+and modify shared memory through synchronized methods in the Log and MBTA classes.
+
+Locks I used:
+The pass_lock and train_lock are used for the passengers and trains.
+
+Train_lock ensures the atomicity of each train movement, making sure that each train
+stops for 600ms, then attempts to move forward in an atomic section. It acquires the lock, 
+checks if the next station is occupied, and if so, it waits (await()) until the station is
+released. If the next station is unoccupied, it moves forward and releases the train_lock.
+
+Pass_lock is used to schedule between trains and passengers, ensuring each passenger
+operation (board/deboard) is atomic. Each train acquires this lock at first, then when it
+stops, it notifies all passenger threads to wake them up, allowing them to board and deboard
+during the train's stop. Passengers also use this lock to achieve the atomic operation of 
+boarding/deboarding. The train then checks if it's okay to move. If so, the train thread 
+locks pass_lock again and moves forward. If not, it waits (await()) until it's ready to move.
+
+The design adheres to the specified rules for the simulation:
+- Events such as train movements, passenger boardings, and deboardings are logged using the required methods in the Log class.
+- Multiple threads are employed for passengers and trains, ensuring independent movement.
+- Trains stay at a new station for 10 milliseconds, and the train thread does not hold a lock during this waiting period.
+- No single global lock is used to allow passengers and trains to move independently.
+- The simulation configuration avoids deadlocks.
+- Data races are avoided.
+- No busy waiting or spinning is used; instead, await/signalAll and wait/notifyAll mechanisms are employed.
+- ReentrantLock, synchronized keyword, and data structures from java.util.concurrent are used as needed.
+- The provided Sim class contains a main method that sets up initial conditions, runs the simulation,
+ writes the resulting log file to disk, and performs verification to check compliance with the specified rules.
